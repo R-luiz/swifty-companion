@@ -12,7 +12,7 @@ class ApiService {
     final uid = dotenv.env['API_UID'];
     final secret = dotenv.env['API_SECRET'];
     if (uid == null || secret == null) {
-      throw Exception('API credentials not found in .env');
+      throw Exception('Missing .env credentials');
     }
 
     final response = await http.post(
@@ -25,13 +25,13 @@ class ApiService {
     );
 
     if (response.statusCode != 200) {
-      throw Exception('Authentication failed (${response.statusCode})');
+      throw Exception('Auth failed: ${response.statusCode}');
     }
 
     final data = jsonDecode(response.body);
     _accessToken = data['access_token'];
     final expiresIn = data['expires_in'] as int;
-    _tokenExpiry = DateTime.now().add(Duration(seconds: expiresIn - 60));
+    _tokenExpiry = DateTime.now().add(Duration(seconds: expiresIn - 90));
   }
 
   Future<void> _ensureToken() async {
@@ -51,16 +51,15 @@ class ApiService {
     );
 
     if (response.statusCode == 404) {
-      throw UserNotFoundException('User "$login" not found');
+      throw UserNotFoundException('$login not found');
     }
     if (response.statusCode == 401) {
-      // Token might have been revoked, try once more
-      _accessToken = null;
+      _accessToken = null; // force re-auth
       await _ensureToken();
       return fetchUser(login);
     }
     if (response.statusCode != 200) {
-      throw Exception('API error (${response.statusCode})');
+      throw Exception('Request failed: ${response.statusCode}');
     }
 
     final data = jsonDecode(response.body);

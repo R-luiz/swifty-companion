@@ -13,8 +13,10 @@ class ProfilePage extends StatelessWidget {
         slivers: [
           _buildHeader(context),
           SliverToBoxAdapter(child: _buildInfoCards()),
-          SliverToBoxAdapter(child: _buildSkillsSection()),
-          SliverToBoxAdapter(child: _buildProjectsSection()),
+          if (user.skills.isNotEmpty)
+            SliverToBoxAdapter(child: _section('Skills', user.skills.map((s) => _skill(s)).toList())),
+          if (user.projects.isNotEmpty)
+            SliverToBoxAdapter(child: _section('Projects', user.projects.map((p) => _project(p)).toList())),
           const SliverToBoxAdapter(child: SizedBox(height: 32)),
         ],
       ),
@@ -83,7 +85,6 @@ class ProfilePage extends StatelessWidget {
       padding: const EdgeInsets.fromLTRB(16, 20, 16, 0),
       child: Column(
         children: [
-          // Level bar
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
@@ -117,25 +118,24 @@ class ProfilePage extends StatelessWidget {
               ],
             ),
           ),
-          const SizedBox(height: 12),
-          // Info grid
+          const SizedBox(height: 14),
           Row(
             children: [
-              Expanded(child: _infoTile('Email', user.email)),
+              Expanded(child: _tile('Email', user.email)),
               const SizedBox(width: 12),
               Expanded(
-                  child: _infoTile(
+                  child: _tile(
                       'Location', user.location ?? 'Unavailable')),
             ],
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 10),
           Row(
             children: [
               Expanded(
-                  child: _infoTile('Wallet', '${user.wallet} \u20B3')),
+                  child: _tile('Wallet', '${user.wallet} \u20B3')),
               const SizedBox(width: 12),
               Expanded(
-                  child: _infoTile(
+                  child: _tile(
                       'Eval. points', '${user.correctionPoints}')),
             ],
           ),
@@ -144,7 +144,7 @@ class ProfilePage extends StatelessWidget {
     );
   }
 
-  Widget _infoTile(String label, String value) {
+  Widget _tile(String label, String value) {
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
@@ -168,9 +168,7 @@ class ProfilePage extends StatelessWidget {
     );
   }
 
-  Widget _buildSkillsSection() {
-    if (user.skills.isEmpty) return const SizedBox.shrink();
-
+  Widget _section(String title, List<Widget> items) {
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 20, 16, 0),
       child: Container(
@@ -182,20 +180,20 @@ class ProfilePage extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text('Skills',
-                style: TextStyle(
+            Text(title,
+                style: const TextStyle(
                     fontSize: 15,
                     fontWeight: FontWeight.w600,
                     color: Color(0xFF333350))),
             const SizedBox(height: 12),
-            ...user.skills.map((s) => _skillRow(s)),
+            ...items,
           ],
         ),
       ),
     );
   }
 
-  Widget _skillRow(Skill skill) {
+  Widget _skill(Skill skill) {
     final pct = (skill.level / 21.0).clamp(0.0, 1.0);
     return Padding(
       padding: const EdgeInsets.only(bottom: 10),
@@ -230,34 +228,7 @@ class ProfilePage extends StatelessWidget {
     );
   }
 
-  Widget _buildProjectsSection() {
-    if (user.projects.isEmpty) return const SizedBox.shrink();
-
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 20, 16, 0),
-      child: Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text('Projects',
-                style: TextStyle(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w600,
-                    color: Color(0xFF333350))),
-            const SizedBox(height: 12),
-            ...user.projects.map((p) => _projectRow(p)),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _projectRow(UserProject project) {
+  Widget _project(UserProject project) {
     final color = project.validated ? const Color(0xFF4a9060) : const Color(0xFFa04050);
     return Padding(
       padding: const EdgeInsets.only(bottom: 8),

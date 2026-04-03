@@ -17,7 +17,7 @@ class _SearchPageState extends State<SearchPage> {
   Future<void> _search() async {
     final login = _controller.text.trim().toLowerCase();
     if (login.isEmpty) {
-      _showError('Please enter a login');
+      _showError('Enter a login');
       return;
     }
 
@@ -32,14 +32,13 @@ class _SearchPageState extends State<SearchPage> {
     } on UserNotFoundException catch (e) {
       _showError(e.message);
     } catch (e) {
-      _showError('Connection error. Check your network.');
+      _showError('Network error');
     } finally {
       if (mounted) setState(() => _loading = false);
     }
   }
 
   void _showError(String msg) {
-    if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text(msg), backgroundColor: Colors.red.shade700),
     );
@@ -84,7 +83,7 @@ class _SearchPageState extends State<SearchPage> {
                 onSubmitted: (_) => _search(),
                 style: const TextStyle(color: Colors.white),
                 decoration: InputDecoration(
-                  hintText: 'Enter a 42 login...',
+                  hintText: 'Search login...',
                   hintStyle: TextStyle(color: Colors.grey.shade600),
                   filled: true,
                   fillColor: const Color(0xFF16213e),

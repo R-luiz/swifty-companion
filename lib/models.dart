@@ -24,24 +24,15 @@ class UserProfile {
   });
 
   factory UserProfile.fromJson(Map<String, dynamic> json) {
-    // Get the 42cursus entry (or fallback to last cursus)
     final cursusUsers = json['cursus_users'] as List? ?? [];
-    Map<String, dynamic>? activeCursus;
-    for (var c in cursusUsers) {
-      if (c['cursus']?['slug'] == '42cursus') {
-        activeCursus = c;
-        break;
-      }
-    }
-    activeCursus ??= cursusUsers.isNotEmpty ? cursusUsers.last : null;
+    final activeCursus = cursusUsers.cast<Map<String, dynamic>>().firstWhere(
+      (c) => c['cursus']?['slug'] == '42cursus',
+      orElse: () => cursusUsers.isNotEmpty ? cursusUsers.last : {},
+    );
 
-    double level = 0;
-    List<Skill> skills = [];
-    if (activeCursus != null) {
-      level = (activeCursus['level'] ?? 0).toDouble();
-      final rawSkills = activeCursus['skills'] as List? ?? [];
-      skills = rawSkills.map((s) => Skill.fromJson(s)).toList();
-    }
+    final level = (activeCursus['level'] ?? 0).toDouble();
+    final rawSkills = activeCursus['skills'] as List? ?? [];
+    final skills = rawSkills.map((s) => Skill.fromJson(s)).toList();
 
     final rawProjects = json['projects_users'] as List? ?? [];
     final projects = rawProjects
@@ -54,7 +45,7 @@ class UserProfile {
     return UserProfile(
       login: json['login'] ?? '',
       displayName: json['displayname'] ?? json['login'] ?? '',
-      email: json['email'] ?? 'N/A',
+      email: json['email'] ?? '',
       imageUrl: imageData?['link'],
       wallet: json['wallet'] ?? 0,
       location: json['location'],
@@ -74,7 +65,7 @@ class Skill {
 
   factory Skill.fromJson(Map<String, dynamic> json) {
     return Skill(
-      name: json['name'] ?? 'Unknown',
+      name: json['name'] ?? '',
       level: (json['level'] ?? 0).toDouble(),
     );
   }
@@ -93,7 +84,7 @@ class UserProject {
 
   factory UserProject.fromJson(Map<String, dynamic> json) {
     return UserProject(
-      name: json['project']?['name'] ?? 'Unknown',
+      name: json['project']?['name'] ?? '?',
       finalMark: json['final_mark'],
       validated: json['validated?'] == true,
     );

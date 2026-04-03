@@ -16,10 +16,7 @@ class SwiftyApp extends StatelessWidget {
     return MaterialApp(
       title: 'Swifty Companion',
       debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        useMaterial3: true,
-        fontFamily: 'Roboto',
-      ),
+      theme: ThemeData(useMaterial3: true),
       home: const SearchPage(),
     );
   }
