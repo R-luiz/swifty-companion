@@ -1,17 +1,14 @@
-# swifty_companion
+# Swifty Companion
 
-A new Flutter project.
+Flutter app that searches 42 students via the 42 API and displays their profile, skills and projects.
 
-## Getting Started
+## Setup
 
-This project is a starting point for a Flutter application.
-
-A few resources to get you started if this is your first Flutter project:
-
-- [Learn Flutter](https://docs.flutter.dev/get-started/learn-flutter)
-- [Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Flutter learning resources](https://docs.flutter.dev/reference/learning-resources)
-
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+1. Create a 42 API app at https://profile.intra.42.fr (Settings > API)
+2. Copy your UID and SECRET into a `.env` file at the project root:
+   ```
+   API_UID=your_uid_here
+   API_SECRET=your_secret_here
+   ```
+3. Run `flutter pub get`
+4. Run `flutter run`
