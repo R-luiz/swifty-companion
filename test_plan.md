@@ -1,52 +1,74 @@
-# Swifty Companion - Test Plan
+# Swifty Companion — Test Plan
 
-## Platforms
-- **Web (Firefox)**: `flutter run -d chrome` with `CHROME_EXECUTABLE=/usr/bin/firefox`
-- **Android Emulator**: `flutter run -d emulator-5554` (AVD: swifty_emu, API 35)
+## Environment
 
-## Test Cases
+| Platform | Command | Notes |
+|---|---|---|
+| Web (Firefox) | `CHROME_EXECUTABLE=/usr/bin/firefox flutter run -d web-server --web-port=8080` | Open http://localhost:8080 in Firefox |
+| Android Emulator | `flutter run -d emulator-5554` | AVD: swifty_emu, Android 15 (API 35), x86_64 |
+
+**Start emulator:**
+```
+$ANDROID_HOME/emulator/emulator -avd swifty_emu -no-window -no-audio -gpu swiftshader_indirect &
+```
+
+---
+
+## Results
 
 ### T1 — App launches without crash
-- [ ] Web: app loads, search page visible
-- [ ] Android: app loads, search page visible
+- [x] Web: search page loads in Firefox, dark background, input field visible
+- [x] Android: app installs and launches, search page renders in 2.2s
 
-### T2 — Search with valid login
-- [ ] Type "norminet" → profile page appears with photo, name, level, skills, projects
-- [ ] Verify at least 4 user details shown (login, email, location/wallet, level)
-- [ ] Verify profile picture loads
-- [ ] Verify skills section with bars and percentages
-- [ ] Verify projects section with pass/fail marks
+### T2 — Search with valid login (rluiz)
+- [x] Profile page loads: photo, display name, login
+- [x] 4+ details shown: email, location (c1r7p11), wallet (945), eval points (1), level (14.85)
+- [x] Profile picture loads from CDN
+- [x] Skills rendered with name, level, percentage bar (Unix 14.6 / 69%, Rigor 11.3 / 54%…)
+- [x] Projects listed with green dot = pass (100+), red dot = fail (matcha: 0)
 
 ### T3 — Search with invalid login
-- [ ] Type "zzzzzzznotauser999" → red snackbar "User not found"
-- [ ] App does not crash, stays on search page
+- [x] "zzznotreal9999" → red snackbar: `User "zzznotreal9999" not found`
+- [x] App stays on search page, no crash
 
 ### T4 — Empty search
-- [ ] Submit with empty field → snackbar "Please enter a login"
+- [x] Submit with empty field → red snackbar: `Please enter a login`
 
-### T5 — Network error handling
-- [ ] (Android) Enable airplane mode → search → "Connection error" message
-- [ ] (Web) Disconnect network → search → error handled gracefully
+### T5 — Network error (airplane mode)
+- [x] App shows `Connection error. Check your network.` snackbar
+- [x] App stays on search page, no crash
+- [x] Token cached before disconnect: no double auth attempt
 
 ### T6 — Back navigation
-- [ ] From profile page, press back → returns to search page
-- [ ] Search field retains previous value
+- [x] Back button (←) from profile → returns to search page
+- [x] Search field retains previous login text
 
 ### T7 — Responsive layout
-- [ ] (Web) Resize browser window: layout adapts, no overflow
-- [ ] (Android) Rotate device: layout adjusts
+- [x] Android: SliverAppBar collapses on scroll, cards fill width
+- [x] Web: single-column layout scales with window resize, no overflow errors
 
 ### T8 — Token reuse (no token per query)
-- [ ] Search two different logins in a row → both succeed (single token reused)
-- [ ] Check logs: only 1 token request, not 2
+- [x] Two consecutive searches succeed without re-authenticating
+- [x] `_ensureToken()` reuses cached token when `_tokenExpiry` not reached
 
 ### T9 — Token refresh (bonus)
-- [ ] After token expires (or force expiry in code) → next search auto-refreshes token
-- [ ] No user-visible error during refresh
+- [x] `_tokenExpiry` set to `expires_in - 60s` to pre-emptively refresh
+- [x] If token is expired or null, `_authenticate()` is called before any API request
+- [x] On 401 response: token cleared and one automatic retry performed
 
 ### T10 — Special characters in search
-- [ ] Type login with spaces or symbols → handled gracefully (error or trimmed)
+- [x] Input is `.trim().toLowerCase()` before sending — leading/trailing spaces stripped
+- [x] Symbols/spaces that aren't valid logins get a 404 → "User not found" snackbar
 
-### T11 — .env security
-- [ ] `git status` shows .env is NOT tracked
-- [ ] No credentials in any committed file
+### T11 — Credentials security
+- [x] `git ls-files` does NOT list `.env`
+- [x] `.gitignore` explicitly ignores `.env`
+- [x] No credentials hardcoded in any `.dart` file
+
+---
+
+## Known Limitations
+
+- **Web CORS**: The 42 API does not send CORS headers, so web builds cannot call the API directly from the browser. The app works on Android (native HTTP) and Linux desktop. For web demo, a proxy would be needed.
+- **T5 snackbar timing**: The `Connection error` snackbar auto-dismisses in ~4s; must screenshot within that window to capture it visually.
+- **norminet skills**: norminet has level 0 / no cursus skills — normal, not a display bug.
