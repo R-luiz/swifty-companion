@@ -12,7 +12,7 @@ class ApiService {
     final uid = dotenv.env['API_UID'];
     final secret = dotenv.env['API_SECRET'];
     if (uid == null || secret == null) {
-      throw Exception('Missing .env credentials');
+      throw AuthException('Missing API_UID / API_SECRET in .env.');
     }
 
     final response = await http.post(
@@ -24,8 +24,12 @@ class ApiService {
       },
     );
 
+    if (response.statusCode == 401) {
+      throw AuthException(
+          'Invalid API credentials. Check API_UID / API_SECRET in .env.');
+    }
     if (response.statusCode != 200) {
-      throw Exception('Auth failed: ${response.statusCode}');
+      throw AuthException('Authentication failed (${response.statusCode}).');
     }
 
     final data = jsonDecode(response.body);
@@ -42,7 +46,7 @@ class ApiService {
     }
   }
 
-  Future<UserProfile> fetchUser(String login) async {
+  Future<UserProfile> fetchUser(String login, {bool allowRetry = true}) async {
     await _ensureToken();
 
     final response = await http.get(
@@ -53,10 +57,12 @@ class ApiService {
     if (response.statusCode == 404) {
       throw UserNotFoundException('$login not found');
     }
+    if (response.statusCode == 401 && allowRetry) {
+      _accessToken = null; // token expired mid-session: re-auth once
+      return fetchUser(login, allowRetry: false);
+    }
     if (response.statusCode == 401) {
-      _accessToken = null; // force re-auth
-      await _ensureToken();
-      return fetchUser(login);
+      throw AuthException('Invalid API credentials. Check .env.');
     }
     if (response.statusCode != 200) {
       throw Exception('Request failed: ${response.statusCode}');
@@ -65,6 +71,14 @@ class ApiService {
     final data = jsonDecode(response.body);
     return UserProfile.fromJson(data);
   }
+}
+
+class AuthException implements Exception {
+  final String message;
+  AuthException(this.message);
+
+  @override
+  String toString() => message;
 }
 
 class UserNotFoundException implements Exception {

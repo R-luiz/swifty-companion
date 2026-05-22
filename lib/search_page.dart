@@ -31,6 +31,8 @@ class _SearchPageState extends State<SearchPage> {
       );
     } on UserNotFoundException catch (e) {
       _showError(e.message);
+    } on AuthException catch (e) {
+      _showError(e.message);
     } catch (e) {
       _showError('Network error');
     } finally {
