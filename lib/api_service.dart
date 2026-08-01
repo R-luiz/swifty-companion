@@ -9,9 +9,9 @@ class ApiService {
   DateTime? _tokenExpiry;
 
   Future<void> _authenticate() async {
-    final uid = dotenv.env['API_UID'];
-    final secret = dotenv.env['API_SECRET'];
-    if (uid == null || secret == null) {
+    final uid = dotenv.env['API_UID']?.trim();
+    final secret = dotenv.env['API_SECRET']?.trim();
+    if (uid == null || uid.isEmpty || secret == null || secret.isEmpty) {
       throw AuthException('Missing API_UID / API_SECRET in .env.');
     }
 
